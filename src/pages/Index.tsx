@@ -46,8 +46,49 @@ const Index = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
+  const validateInputForStep = (input: string): boolean => {
+  const normalized = input.trim().toLowerCase();
+
+  if (!normalized) return false;
+
+  switch (step) {
+    case 0:
+      return commonRepairs.some(r => r.title.toLowerCase() === normalized);
+    case 1:
+      return deviceTypes.some(d => d.name.toLowerCase() === normalized);
+    case 2:
+      return deviceModels
+        .filter(m => m.deviceType.toLowerCase() === deviceVendor.toLowerCase())
+        .some(m => m.name.toLowerCase() === normalized);
+    case 4:
+      return ["oem", "aftermarket"].includes(normalized);
+    case 8:
+      return ["yes", "no"].includes(normalized);
+    case 9:
+      return ["self", "agent"].includes(normalized);
+    case 5:
+    case 6:
+    case 7:
+      return input.trim().length >= 3;
+    default:
+      return true;
+  }
+};
+
+
   const handleUserReply = async (input: string) => {
-  setChat(prev => [...prev, `🧑‍💻 ${input}`]);
+    const trimmed = input.trim();
+
+    if (!validateInputForStep(trimmed)) {
+      setChat(prev => [
+        ...prev,
+        `🧑‍💻 ${trimmed}`,
+        `🤖 Hmm, that doesn't seem right for this step. Please try again using one of the suggested options.`
+      ]);
+      return;
+    }
+
+    setChat(prev => [...prev, `🧑‍💻 ${trimmed}`]);
 
   const botRespond = async (message: string) => {
     setIsTyping(true);
